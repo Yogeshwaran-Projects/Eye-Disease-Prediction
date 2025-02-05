@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eye Disease Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script>
+        function showLoading() {
+            const resultContainer = document.getElementById('result-container');
+            let progressText = [
+                "Uploading image...",
+                "Analyzing image...",
+                "Applying advanced AI techniques...",
+                "Preparing results..."
+            ];
+            let index = 0;
+
+            resultContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center space-y-4">
+                    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600"></div>
+                    <p id="progress-text" class="text-blue-700 font-medium">${progressText[index]}</p>
+                </div>
+            `;
+
+            // Update the text dynamically every second
+            const interval = setInterval(() => {
+                index++;
+                if (index < progressText.length) {
+                    document.getElementById("progress-text").textContent = progressText[index];
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1000); // Update every second
+        }
+
+        function displayResult(imageSrc, result, details) {
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = `
+                <div class="flex flex-col md:flex-row items-center bg-white shadow-lg rounded-lg overflow-hidden">
+                    <img src="${imageSrc}" alt="Uploaded Eye Image" class="w-48 h-48 object-cover m-4 rounded-lg border border-gray-300">
+                    <div class="p-4 text-gray-800">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-2">Prediction Result</h3>
+                        <p class="text-lg font-semibold">Predicted Condition: <span class="text-green-700">${result}</span></p>
+                        <p class="mt-4">${details}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(error) {
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = `
+                <div class="bg-red-100 text-red-800 p-4 mt-4 rounded-lg">
+                    <h3 class="text-xl font-bold">Error</h3>
+                    <p class="mt-2">${error}</p>
+                </div>
+            `;
+        }
+
+        function getConditionDetails(condition) {
+            const details = {
+                'cataract': 'Cataract is a condition characterized by clouding of the lens in the eye, leading to blurred vision. Early detection and surgery can restore vision effectively.',
+                'diabetic_retinopathy': 'Diabetic Retinopathy is a complication of diabetes that affects the eyes. It is caused by damage to the blood vessels of the retina. Regular monitoring and early treatment are crucial.',
+                'glaucoma': 'Glaucoma is a group of eye conditions that damage the optic nerve, often due to abnormally high pressure in the eye. Timely treatment can prevent vision loss.',
+                'normal': 'Your eyes appear to be healthy! However, regular eye check-ups are recommended to maintain good eye health.'
+            };
+            return details[condition] || 'No detailed information available for this condition.';
+        }
+
+        async function handlePrediction(event) {
+            event.preventDefault();
+            showLoading();
+            const formData = new FormData(event.target);
+
+            // Simulate delay (4–5 seconds)
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/predict', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error('Failed to process the image. Please try again.');
+
+                    const data = await response.json();
+                    const details = getConditionDetails(data.prediction);
+                    displayResult(URL.createObjectURL(formData.get('file')), data.prediction, details);
+                } catch (error) {
+                    showError(error.message);
+                }
+            }, 4000); // 4-second delay
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col">
+    <!-- Header -->
+    <header class="bg-blue-900 text-white py-4 shadow-lg">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">EyeCare AI</h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="#about" class="hover:underline">About</a></li>
+                    <li><a href="#features" class="hover:underline">Features</a></li>
+                    <li><a href="#contact" class="hover:underline">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <section class="container mx-auto px-4 py-12">
+            <div class="text-center max-w-2xl mx-auto">
+                <h2 class="text-4xl font-bold text-blue-900 mb-4">Advanced Eye Disease Prediction</h2>
+                <p class="text-lg text-gray-700 mb-8">Upload an eye image, and our AI-powered model will provide an accurate diagnosis for potential eye diseases.</p>
+                <form id="upload-form" onsubmit="handlePrediction(event)" enctype="multipart/form-data" class="bg-white p-6 shadow-md rounded-lg space-y-4">
+                    <div>
+                        <label for="file" class="block text-gray-700 font-medium mb-2">Upload Eye Image</label>
+                        <input type="file" name="file" id="file" accept="image/*" required
+                            class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+                        Predict
+                    </button>
+                </form>
+                <div id="result-container" class="mt-8"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-900 text-white py-6">
+        <div class="container mx-auto text-center">
+            <p class="text-lg">For inquiries, contact us at <a href="mailto:support@eyecareai.com" class="underline">support@eyecareai.com</a></p>
+            <p class="text-sm mt-2">&copy; 2025 EyeCare AI. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
