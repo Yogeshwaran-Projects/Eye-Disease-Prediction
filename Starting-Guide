@@ -1,0 +1,3 @@
+install requirements
+python src/main.py - to train and save model
+python src/app.py - to launch the application
